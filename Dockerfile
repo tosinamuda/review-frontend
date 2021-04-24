@@ -1,23 +1,15 @@
-# Stage 1
+FROM node:14.16.1 as build
 
-FROM node:10-alpine as build-step
+WORKDIR /app
 
-RUN mkdir -p /FRONTEND
-
-WORKDIR /FRONTEND 
-
-COPY package.json /FRONTEND 
+COPY ./package.json /app/package.json
+COPY ./package-lock.json /app/package-lock.json
 
 RUN npm install
+COPY . .
+RUN npm run build --prod
 
-COPY . /FRONTEND 
-
-RUN npm run  build --prod
-#RUN ls /FRONTEND/dist/review-system  
-
-# Stage 2
 
 FROM nginx:1.17.1-alpine
-
-COPY --from=build-step /FRONTEND/dist/review-system  /usr/share/nginx/html
-
+COPY ./nginx/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist/review-system /usr/share/nginx/html
